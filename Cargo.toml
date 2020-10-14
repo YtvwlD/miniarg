@@ -7,8 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+miniarg_derive = { path = "miniarg_derive", optional = true }
 
 [features]
 default = ["std"]
 std = []
 alloc = []
+derive = ["miniarg_derive"]

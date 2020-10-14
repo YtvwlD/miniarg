@@ -57,3 +57,20 @@ pub enum ParseError<'a> {
     /// the default error
     Unknown,
 }
+
+/// The main trait.
+///
+/// Derive this with an enum to get the functionality.
+/// Each kind represents an "-{key}" option.
+/// They all have a string as a value and may occur multiple times.
+#[cfg(feature = "derive")]
+pub trait Key {
+    /// Parse the cmdline.
+    ///
+    /// You'll get a vector containing arrays with two strings.
+    #[cfg(any(feature = "alloc", feature = "std"))]
+    fn parse(cmdline: &mut str) -> Result<Vec<(&str, &str)>, ParseError>;
+}
+
+#[cfg(feature = "derive")]
+pub use miniarg_derive::Key;
