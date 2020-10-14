@@ -69,6 +69,9 @@ impl<'a> Iterator for SplitArgs<'a> {
 mod tests {
     use super::*;
     
+    #[cfg(feature = "alloc")]
+    use alloc::{vec::Vec, vec};
+    
     #[test]
     /// one continuous string
     fn basic() {
