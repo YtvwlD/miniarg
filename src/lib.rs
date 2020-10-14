@@ -8,6 +8,8 @@ use std::vec::Vec;
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
+mod split_args;
+
 /// Parse the command line.
 ///
 /// This expects a slice of possible options and turns `-option foo` to `[("option", "foo")]`.
@@ -16,11 +18,11 @@ use alloc::vec::Vec;
 /// This function errors, if the command line options are not valid, see `ParseError` for details.
 #[cfg(any(feature = "std", feature = "alloc"))]
 pub fn parse<'a>(cmdline: &'a mut str, options: &[&'a str]) -> Result<Vec<(&'a str, &'a str)>, ParseError<'a>> {
-    let posix_parsed = cmdline_words_parser::parse_posix(cmdline);
+    let args = split_args::SplitArgs::new(cmdline);
     let mut result = Vec::new();
     let mut last = None;
     // skip argv[0]
-    for arg in posix_parsed.skip(1) {
+    for arg in args.skip(1) {
         if let Some(l) = last {
             // the last element was a key
             result.push((l, arg));
