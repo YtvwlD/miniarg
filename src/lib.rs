@@ -42,7 +42,7 @@ pub fn parse<'a>(cmdline: &'a mut str, options: &[&'a str]) -> Result<Vec<(&'a s
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 /// Errors occurred during parsing the command line.
 pub enum ParseError<'a> {
     /// expected a key, but argument didn't start with a dash
