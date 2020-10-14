@@ -1,5 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(not(any(feature = "std", feature = "alloc")))]
+compile_error!("either `std` or `alloc` feature is currently required to build this crate");
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
