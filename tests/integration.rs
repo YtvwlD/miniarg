@@ -5,14 +5,14 @@ use miniarg::{parse, ParseError};
 /// Just calling a binary should produce an empty result.
 fn basic() {
     let mut cmdline = "executable".to_string();
-    assert_eq!(parse(&mut cmdline, &[]).unwrap(), vec![]);
+    assert_eq!(parse(&mut cmdline, &[]).unwrap(), Vec::<(&&str, &str)>::new());
 }
 
 #[test]
 /// One key, one value.
 fn key_value() {
     let mut cmdline = "executable -key value".to_string();
-    assert_eq!(parse(&mut cmdline, &["key"]).unwrap(), vec![("key", "value")]);
+    assert_eq!(parse(&mut cmdline, &["key"]).unwrap(), vec![(&"key", "value")]);
 }
 
 #[test]
@@ -21,7 +21,7 @@ fn two_key_value() {
     let mut cmdline = "executable -key1 value1 -key2 value2".to_string();
     assert_eq!(
         parse(&mut cmdline, &["key1", "key2"]).unwrap(),
-        vec![("key1", "value1"), ("key2", "value2")]
+        vec![(&"key1", "value1"), (&"key2", "value2")]
     );
 }
 
@@ -31,7 +31,7 @@ fn key_two_value() {
     let mut cmdline = "executable -key value1 -key value2".to_string();
     assert_eq!(
         parse(&mut cmdline, &["key", "key"]).unwrap(),
-        vec![("key", "value1"), ("key", "value2")]
+        vec![(&"key", "value1"), (&"key", "value2")]
     );
 }
 

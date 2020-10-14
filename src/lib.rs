@@ -7,9 +7,15 @@ compile_error!("either `std` or `alloc` feature is currently required to build t
 extern crate alloc;
 
 #[cfg(feature = "std")]
-use std::vec::Vec;
+use std::{
+    string::{String, ToString},
+    vec::Vec,
+};
 #[cfg(feature = "alloc")]
-use alloc::vec::Vec;
+use alloc::{
+    vec::Vec,
+    string::{String, ToString},
+};
 
 mod split_args;
 
@@ -20,7 +26,8 @@ mod split_args;
 ///
 /// This function errors, if the command line options are not valid, see `ParseError` for details.
 #[cfg(any(feature = "std", feature = "alloc"))]
-pub fn parse<'a>(cmdline: &'a mut str, options: &[&'a str]) -> Result<Vec<(&'a str, &'a str)>, ParseError<'a>> {
+pub fn parse<'a, 'b, T>(cmdline: &'a mut str, options: &'b [T]) -> Result<Vec<(&'b T, &'a str)>, ParseError<'a>>
+where T: ToString {
     let args = split_args::SplitArgs::new(cmdline);
     let mut result = Vec::new();
     let mut last = None;
@@ -33,9 +40,8 @@ pub fn parse<'a>(cmdline: &'a mut str, options: &[&'a str]) -> Result<Vec<(&'a s
         } else {
             // the next element has to be a key
             if let Some(a) = arg.strip_prefix("-") {
-                if options.contains(&a) {
-                    last = Some(a);
-                } else {
+                last = options.iter().find(|o| first_lower(&o.to_string()) == a);
+                if last.is_none() {
                     return Err(ParseError::UnknownKey(a))
                 }
             } else {
@@ -45,7 +51,6 @@ pub fn parse<'a>(cmdline: &'a mut str, options: &[&'a str]) -> Result<Vec<(&'a s
     }
     Ok(result)
 }
-
 
 #[derive(Debug, PartialEq)]
 /// Errors occurred during parsing the command line.
@@ -67,10 +72,20 @@ pub enum ParseError<'a> {
 pub trait Key {
     /// Parse the cmdline.
     ///
-    /// You'll get a vector containing arrays with two strings.
+    /// You'll get a vector containing tuples with two strings or with an enum kind and a string.
     #[cfg(any(feature = "alloc", feature = "std"))]
-    fn parse(cmdline: &mut str) -> Result<Vec<(&str, &str)>, ParseError>;
+    fn parse<T>(cmdline: &mut str) -> Result<Vec<(&T, &str)>, ParseError>;
 }
 
 #[cfg(feature = "derive")]
 pub use miniarg_derive::Key;
+
+/// Turn the first character into lowercase.
+pub(crate) fn first_lower(input: &str) -> String {
+    // taken from https://stackoverflow.com/a/38406885/2192464
+    let mut c = input.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
+    }
+}
