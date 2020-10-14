@@ -74,14 +74,14 @@ pub trait Key {
     ///
     /// You'll get a vector containing tuples with two strings or with an enum kind and a string.
     #[cfg(any(feature = "alloc", feature = "std"))]
-    fn parse<T>(cmdline: &mut str) -> Result<Vec<(&T, &str)>, ParseError>;
+    fn parse(cmdline: &mut str) -> Result<Vec<(&Self, &str)>, ParseError>;
 }
 
 #[cfg(feature = "derive")]
 pub use miniarg_derive::Key;
 
 /// Turn the first character into lowercase.
-pub(crate) fn first_lower(input: &str) -> String {
+fn first_lower(input: &str) -> String {
     // taken from https://stackoverflow.com/a/38406885/2192464
     let mut c = input.chars();
     match c.next() {

@@ -1,10 +1,6 @@
-use std::string::{String, ToString};
-
 use proc_macro::TokenStream;
 use quote::quote;
 use syn;
-
-use crate::first_lower;
 
 // taken in parts from
 // https://doc.rust-lang.org/book/ch19-06-macros.html#how-to-write-a-custom-derive-macro
@@ -27,24 +23,32 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
     };
     let mut variants = syn::punctuated::Punctuated::<_, syn::token::Comma>::new();
     for variant in &data.variants {
-        variants.push(first_lower(&variant.ident.to_string()));
+        let mut path = syn::punctuated::Punctuated::<syn::PathSegment, syn::token::Colon2>::new();
+        path.push(syn::PathSegment {
+            ident: syn::token::SelfType{span: proc_macro2::Span::call_site()}.into(),
+            arguments: syn::PathArguments::None,
+        });
+        path.push(syn::PathSegment {
+            ident: variant.ident.clone(),
+            arguments: syn::PathArguments::None,
+        });
+        variants.push(syn::Path {
+            leading_colon: None,
+            segments: path,
+        });
     }
     let gen = quote! {
+        impl fmt::Display for #name {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                fmt::Debug::fmt(self, f)
+            }
+        }
+        
         impl Key for #name {
-            fn parse(cmdline: &mut str) -> Result<Vec<(&str, &str)>, miniarg::ParseError> {
+            fn parse(cmdline: &mut str) -> Result<Vec<(&Self, &str)>, miniarg::ParseError> {
                 miniarg::parse(cmdline, &[#variants])
             }
         }
     };
     gen.into()
-}
-
-/// Turn the first character into lowercase.
-fn first_lower(input: &str) -> String {
-    // taken from https://stackoverflow.com/a/38406885/2192464
-    let mut c = input.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
-    }
 }
