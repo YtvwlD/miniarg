@@ -1,0 +1,15 @@
+[package]
+name = "miniarg"
+version = "0.1.0"
+authors = ["Niklas Sombert <niklas@ytvwld.de>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cmdline_words_parser = { version = "0.2", default-features = false }
+
+[features]
+default = ["std"]
+std = ["cmdline_words_parser/std"]
+alloc = ["cmdline_words_parser/alloc"]
