@@ -1,4 +1,7 @@
 //! The main file for integration tests.
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg(any(feature = "alloc", feature = "std"))]
+
 extern crate alloc;
 use alloc::{vec, vec::Vec};
 
