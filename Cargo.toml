@@ -9,6 +9,7 @@ license = "MPL-2.0"
 
 [dependencies]
 miniarg_derive = { path = "miniarg_derive", optional = true }
+cfg-if = "1.0"
 
 [features]
 default = ["std"]

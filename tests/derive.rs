@@ -1,12 +1,9 @@
 //! Tests for the derive macro.
 #![cfg(feature = "derive")]
 
-#[cfg(feature = "std")]
-use std::fmt;
-#[cfg(not(feature = "std"))]
 use core::fmt;
 
-use miniarg::{Key, ParseError};
+use miniarg::{Key, ArgumentIterator, ParseError};
 
 #[derive(Debug, Key, PartialEq)]
 enum SimpleKeys {
@@ -19,14 +16,20 @@ enum SimpleKeys {
 /// Just calling a binary should produce an empty result.
 fn basic() {
     let mut cmdline = "executable".to_string();
-    assert_eq!(SimpleKeys::parse(&mut cmdline).unwrap(), Vec::new());
+    assert_eq!(
+        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        Vec::new()
+    );
 }
 
 #[test]
 /// One key, one value.
 fn key_value() {
     let mut cmdline = "executable -key value".to_string();
-    assert_eq!(SimpleKeys::parse(&mut cmdline).unwrap(), vec![(&SimpleKeys::Key, "value")]);
+    assert_eq!(
+        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        vec![(&SimpleKeys::Key, "value")]
+    );
 }
 
 #[test]
@@ -34,7 +37,7 @@ fn key_value() {
 fn two_key_value() {
     let mut cmdline = "executable -key1 value1 -key2 value2".to_string();
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).unwrap(),
+        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
         vec![(&SimpleKeys::Key1, "value1"), (&SimpleKeys::Key2, "value2")]
     );
 }
@@ -44,7 +47,7 @@ fn two_key_value() {
 fn key_two_value() {
     let mut cmdline = "executable -key value1 -key value2".to_string();
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).unwrap(),
+        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
         vec![(&SimpleKeys::Key, "value1"), (&SimpleKeys::Key, "value2")]
     );
 }
@@ -53,7 +56,10 @@ fn key_two_value() {
 /// Just a key should produce an empty vec.
 fn value_missing() {
     let mut cmdline = "executable -key".to_string();
-    assert_eq!(SimpleKeys::parse(&mut cmdline).unwrap(), vec![]);
+    assert_eq!(
+        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        vec![]
+    );
 }
 
 #[test]
@@ -61,7 +67,7 @@ fn value_missing() {
 fn invalid_key() {
     let mut cmdline = "executable -invalid".to_string();
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).unwrap_err(),
+        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
         ParseError::UnknownKey("invalid")
     );
 }
@@ -71,7 +77,7 @@ fn invalid_key() {
 fn missing_key() {
     let mut cmdline = "executable value".to_string();
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).unwrap_err(),
+        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
         ParseError::NotAKey("value")
     );
 }

@@ -1,18 +1,27 @@
 //! The main file for integration tests.
+extern crate alloc;
+use alloc::{vec, vec::Vec};
+
 use miniarg::{parse, ParseError};
 
 #[test]
 /// Just calling a binary should produce an empty result.
 fn basic() {
     let mut cmdline = "executable".to_string();
-    assert_eq!(parse(&mut cmdline, &[]).unwrap(), Vec::<(&&str, &str)>::new());
+    assert_eq!(
+        parse::<&str>(&mut cmdline, &[]).collect::<Result<Vec<(_, _)>, _>>().unwrap(),
+        Vec::new()
+    );
 }
 
 #[test]
 /// One key, one value.
 fn key_value() {
     let mut cmdline = "executable -key value".to_string();
-    assert_eq!(parse(&mut cmdline, &["key"]).unwrap(), vec![(&"key", "value")]);
+    assert_eq!(
+        parse(&mut cmdline, &["key"]).collect::<Result<Vec<_>, _>>().unwrap(),
+        vec![(&"key", "value")]
+    );
 }
 
 #[test]
@@ -20,7 +29,7 @@ fn key_value() {
 fn two_key_value() {
     let mut cmdline = "executable -key1 value1 -key2 value2".to_string();
     assert_eq!(
-        parse(&mut cmdline, &["key1", "key2"]).unwrap(),
+        parse(&mut cmdline, &["key1", "key2"]).collect::<Result<Vec<_>, _>>().unwrap(),
         vec![(&"key1", "value1"), (&"key2", "value2")]
     );
 }
@@ -30,7 +39,7 @@ fn two_key_value() {
 fn key_two_value() {
     let mut cmdline = "executable -key value1 -key value2".to_string();
     assert_eq!(
-        parse(&mut cmdline, &["key", "key"]).unwrap(),
+        parse(&mut cmdline, &["key", "key"]).collect::<Result<Vec<_>, _>>().unwrap(),
         vec![(&"key", "value1"), (&"key", "value2")]
     );
 }
@@ -39,7 +48,7 @@ fn key_two_value() {
 /// Just a key should produce an empty vec.
 fn value_missing() {
     let mut cmdline = "executable -key".to_string();
-    assert_eq!(parse(&mut cmdline, &["key"]).unwrap(), vec![]);
+    assert_eq!(parse(&mut cmdline, &["key"]).collect::<Result<Vec<_>, _>>().unwrap(), vec![]);
 }
 
 #[test]
@@ -47,7 +56,7 @@ fn value_missing() {
 fn invalid_key() {
     let mut cmdline = "executable -invalid".to_string();
     assert_eq!(
-        parse(&mut cmdline, &["key"]).unwrap_err(),
+        parse(&mut cmdline, &["key"]).collect::<Result<Vec<_>, _>>().unwrap_err(),
         ParseError::UnknownKey("invalid")
     );
 }
@@ -57,7 +66,7 @@ fn invalid_key() {
 fn missing_key() {
     let mut cmdline = "executable value".to_string();
     assert_eq!(
-        parse(&mut cmdline, &["key"]).unwrap_err(),
+        parse(&mut cmdline, &["key"]).collect::<Result<Vec<_>, _>>().unwrap_err(),
         ParseError::NotAKey("value")
     );
 }

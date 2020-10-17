@@ -68,8 +68,7 @@ impl<'a> Iterator for SplitArgs<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
-    #[cfg(feature = "alloc")]
+
     use alloc::{vec::Vec, vec};
     
     #[test]
