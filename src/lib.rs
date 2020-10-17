@@ -29,7 +29,7 @@ impl<'b> ToString for &str {
 /// Only `-key value` options are supported.
 ///
 /// This function errors, if the command line options are not valid, see `ParseError` for details.
-pub fn parse<'a, 'b, T>(cmdline: &'a mut str, options: &'b [T]) -> ArgumentIterator<'a, 'b, T>
+pub fn parse<'a, 'b, T>(cmdline: &'a str, options: &'b [T]) -> ArgumentIterator<'a, 'b, T>
 where T: ToString {
     let args = SplitArgs::new(cmdline);
     ArgumentIterator::<'a, 'b, T>::new(args, options)
@@ -110,7 +110,7 @@ pub trait Key {
     /// Parse the cmdline.
     ///
     /// You'll get a vector containing tuples with two strings or with an enum kind and a string.
-    fn parse(cmdline: &mut str) -> ArgumentIterator<Self> where Self: ToString + Sized;
+    fn parse(cmdline: &str) -> ArgumentIterator<Self> where Self: ToString + Sized;
 }
 
 #[cfg(feature = "derive")]

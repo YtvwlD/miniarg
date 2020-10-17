@@ -15,9 +15,9 @@ enum SimpleKeys {
 #[test]
 /// Just calling a binary should produce an empty result.
 fn basic() {
-    let mut cmdline = "executable".to_string();
+    let cmdline = "executable";
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
         Vec::new()
     );
 }
@@ -25,9 +25,9 @@ fn basic() {
 #[test]
 /// One key, one value.
 fn key_value() {
-    let mut cmdline = "executable -key value".to_string();
+    let cmdline = "executable -key value";
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
         vec![(&SimpleKeys::Key, "value")]
     );
 }
@@ -35,9 +35,9 @@ fn key_value() {
 #[test]
 /// two keys, two values.
 fn two_key_value() {
-    let mut cmdline = "executable -key1 value1 -key2 value2".to_string();
+    let cmdline = "executable -key1 value1 -key2 value2";
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
         vec![(&SimpleKeys::Key1, "value1"), (&SimpleKeys::Key2, "value2")]
     );
 }
@@ -45,9 +45,9 @@ fn two_key_value() {
 #[test]
 /// one key, two values.
 fn key_two_value() {
-    let mut cmdline = "executable -key value1 -key value2".to_string();
+    let cmdline = "executable -key value1 -key value2";
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
         vec![(&SimpleKeys::Key, "value1"), (&SimpleKeys::Key, "value2")]
     );
 }
@@ -55,9 +55,9 @@ fn key_two_value() {
 #[test]
 /// Just a key should produce an empty vec.
 fn value_missing() {
-    let mut cmdline = "executable -key".to_string();
+    let cmdline = "executable -key";
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
         vec![]
     );
 }
@@ -65,9 +65,9 @@ fn value_missing() {
 #[test]
 /// An invalid key should produce an error.
 fn invalid_key() {
-    let mut cmdline = "executable -invalid".to_string();
+    let cmdline = "executable -invalid";
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
         ParseError::UnknownKey("invalid")
     );
 }
@@ -75,9 +75,9 @@ fn invalid_key() {
 #[test]
 /// An option without a key should produce an error.
 fn missing_key() {
-    let mut cmdline = "executable value".to_string();
+    let cmdline = "executable value";
     assert_eq!(
-        SimpleKeys::parse(&mut cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
         ParseError::NotAKey("value")
     );
 }

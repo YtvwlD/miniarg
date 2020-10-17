@@ -45,7 +45,7 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
         }
         
         impl Key for #name {
-            fn parse(cmdline: &mut str) -> ArgumentIterator<Self> {
+            fn parse(cmdline: &str) -> ArgumentIterator<Self> {
                 miniarg::parse(cmdline, &[#variants])
             }
         }
