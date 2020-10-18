@@ -5,7 +5,7 @@ use core::fmt;
 
 use miniarg::{Key, ArgumentIterator, ParseError};
 
-#[derive(Debug, Key, PartialEq)]
+#[derive(Debug, Key, PartialEq, Eq, Hash)]
 enum SimpleKeys {
     Key,
     Key1,

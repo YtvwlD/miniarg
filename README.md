@@ -34,7 +34,7 @@ assert_eq!(args, vec![(&"key", "value")]);
 If you compile with `std` or `alloc`, it also supports passing [`ToString`] instead of strings,
 for example your own enum:
 ```rust
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 enum MyKeys {
     Foo,
     Bar,
@@ -53,7 +53,7 @@ As you can see, the first character of the enum kinds is converted to lowercase.
 
 If you compile with `derive`, you can use a custom derive instead:
 ```rust
-#[derive(Debug,PartialEq,Key)]
+#[derive(Debug, Key, PartialEq)]
 enum MyKeys {
     Foo,
     Bar,

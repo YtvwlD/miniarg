@@ -33,7 +33,7 @@
 //! If you compile with `std` or `alloc`, it also supports passing [`ToString`] instead of strings,
 //! for example your own enum:
 //! ```
-//! #[derive(Debug,PartialEq)]
+//! #[derive(Debug, PartialEq)]
 //! enum MyKeys {
 //!     Foo,
 //!     Bar,
@@ -53,7 +53,7 @@
 //!
 //! If you compile with `derive`, you can use a custom derive instead:
 //! ```ignore
-//! #[derive(Debug,PartialEq,Key)]
+//! #[derive(Debug, Key, PartialEq)]
 //! enum MyKeys {
 //!     Foo,
 //!     Bar,
@@ -73,10 +73,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 use core::iter::Skip;
+use core::fmt;
 #[cfg(any(feature = "alloc", feature = "std"))]
 use alloc::{
     string::{String, ToString},
 };
+#[cfg(feature = "std")]
+use std::error::Error;
 
 use cfg_if::cfg_if;
 
@@ -94,6 +97,8 @@ impl<'b> ToString for &str {
         self
     }
 }
+#[cfg(not(any(feature = "std")))]
+trait Error {}
 
 /// Parse the command line.
 ///
@@ -158,16 +163,28 @@ impl<'a, 'b, T> Iterator for ArgumentIterator<'a, 'b, T> where T: ToString {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[non_exhaustive]
 /// Errors occurred during parsing the command line.
 pub enum ParseError<'a> {
     /// expected a key, but argument didn't start with a dash
     NotAKey(&'a str),
     /// key is not accepted
     UnknownKey(&'a str),
-    /// the default error
-    Unknown,
+    // the default error
+    _Unknown,
 }
+
+impl<'a> fmt::Display for ParseError<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        match self {
+            Self::NotAKey(s) => write!(f, "expected '{}' to start with a dash", s),
+            Self::UnknownKey(s) => write!(f, "'{}' is not a known key", s),
+            _ => write!(f, "unknown parse error"),
+        }
+    }
+}
+impl<'a> Error for ParseError<'a> {}
 
 #[cfg(all(feature = "derive", not(any(feature = "alloc", feature = "std"))))]
 compile_error!("either `std` or `alloc` feature is currently required to get the derive feature");
@@ -185,7 +202,7 @@ compile_error!("either `std` or `alloc` feature is currently required to get the
 /// ```
 /// # #[macro_use] use miniarg::*;
 /// use std::fmt;
-/// #[derive(Debug,PartialEq,Key)]
+/// #[derive(Debug, Key, PartialEq, Eq, Hash)]
 /// enum MyKeys {
 ///     Foo,
 ///     Bar,
