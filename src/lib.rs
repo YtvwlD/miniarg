@@ -1,3 +1,75 @@
+//! A minimal argument parser, with support for no-std and no-alloc
+//!
+//! Only cmdlines in the form of `program -foo value -bar value` are supported.
+//! (That means: values are strings, keys start with a single dash, keys can occur multiple times.)
+//!
+//! # Usage
+//!
+//! Add this to your `Cargo.toml`:
+//! ```toml
+//! [dependencies]
+//! miniarg = "0.1"
+//! ```
+//! The feature `std` is enabled by default and `alloc` and `derive` are optional.
+//!
+//! # Examples
+//!
+//! A minimal example looks like this:
+//! ```
+//! let cmdline = "executable -key value";
+//! let mut args = miniarg::parse(&cmdline, &["key"]);
+//! assert_eq!(args.next(), Some(Ok((&"key", "value"))));
+//! assert_eq!(args.next(), None);
+//! ```
+//!
+//! You can use `collect::<Result<Vec<_>, _>>()` to get a `Vec`:
+//! ```
+//! let cmdline = "executable -key value";
+//! let args = miniarg::parse(&cmdline, &["key"]).collect::<Result<Vec<_>, _>>()?;
+//! assert_eq!(args, vec![(&"key", "value")]);
+//! # Ok::<(), miniarg::ParseError<'static>>(())
+//! ```
+//!
+//! If you compile with `std` or `alloc`, it also supports passing [`ToString`] instead of strings,
+//! for example your own enum:
+//! ```
+//! #[derive(Debug,PartialEq)]
+//! enum MyKeys {
+//!     Foo,
+//!     Bar,
+//! }
+//! impl std::fmt::Display for MyKeys {
+//!     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+//!         std::fmt::Debug::fmt(self, f)
+//!     }
+//! }
+//! let cmdline = "executable -foo value -bar value";
+//! let args = miniarg::parse(&cmdline, &[MyKeys::Foo, MyKeys::Bar])
+//! .collect::<Result<Vec<_>, _>>()?;
+//! assert_eq!(args, vec![(&MyKeys::Foo, "value"), (&MyKeys::Bar, "value")]);
+//! # Ok::<(), miniarg::ParseError<'static>>(())
+//! ```
+//! As you can see, the first character of the enum kinds is converted to lowercase.
+//!
+//! If you compile with `derive`, you can use a custom derive instead:
+//! ```ignore
+//! #[derive(Debug,PartialEq,Key)]
+//! enum MyKeys {
+//!     Foo,
+//!     Bar,
+//! }
+//! let cmdline = "executable -foo value -bar value";
+//! let args = MyKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>()?;
+//! assert_eq!(args, vec![(&MyKeys::Foo, "value"), (&MyKeys::Bar, "value")]);
+//! # Ok::<(), miniarg::ParseError<'static>>(())
+//! ```
+//!
+//! The code never panics, but the returned iterator will contain [`ParseError`]s
+//! if anything goes wrong.
+//!
+//! [`ToString`]: https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html
+//! [`ParseError`]: enum.ParseError.html
+#![doc(html_root_url = "https://docs.rs/miniarg/0.1.0")]
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 use core::iter::Skip;
@@ -25,16 +97,16 @@ impl<'b> ToString for &str {
 
 /// Parse the command line.
 ///
-/// This expects a slice of possible options and turns `-option foo` to `[("option", "foo")]`.
-/// Only `-key value` options are supported.
-///
-/// This function errors, if the command line options are not valid, see `ParseError` for details.
+/// See the main crate documentation for more details and examples.
 pub fn parse<'a, 'b, T>(cmdline: &'a str, options: &'b [T]) -> ArgumentIterator<'a, 'b, T>
 where T: ToString {
     let args = SplitArgs::new(cmdline);
     ArgumentIterator::<'a, 'b, T>::new(args, options)
 }
 
+/// The iterator returned by [`parse`].
+///
+/// [`parse`]: fn.parse.html
 pub struct ArgumentIterator<'a, 'b, T> where T: ToString {
     args: Skip<SplitArgs<'a>>,
     options: &'b [T],
@@ -52,6 +124,7 @@ impl<'a, 'b, T> ArgumentIterator<'a, 'b, T> where T: ToString {
 impl<'a, 'b, T> Iterator for ArgumentIterator<'a, 'b, T> where T: ToString {
     type Item = Result<(&'b T, &'a str), ParseError<'a>>;
     
+    /// Get the next key pair or an error.
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let arg = match self.args.next() {
@@ -103,16 +176,37 @@ compile_error!("either `std` or `alloc` feature is currently required to get the
 /// The main trait.
 ///
 /// Derive this with an enum to get the functionality.
-/// Each kind represents an "-{key}" option.
+/// Each kind represents a `-key value` option (starts with lowercase).
 /// They all have a string as a value and may occur multiple times.
+///
+/// The crate needs to be compiled with `derive` and either `std` or `alloc`.
+///
+/// # Example
+/// ```
+/// # #[macro_use] use miniarg::*;
+/// use std::fmt;
+/// #[derive(Debug,PartialEq,Key)]
+/// enum MyKeys {
+///     Foo,
+///     Bar,
+/// }
+/// # fn main() -> Result<(), miniarg::ParseError<'static>> {
+/// let cmdline = "executable -foo value -bar value";
+/// let args = MyKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>()?;
+/// assert_eq!(args, vec![(&MyKeys::Foo, "value"), (&MyKeys::Bar, "value")]);
+/// # Ok(())
+/// # }
 #[cfg(feature = "derive")]
 pub trait Key {
     /// Parse the cmdline.
     ///
-    /// You'll get a vector containing tuples with two strings or with an enum kind and a string.
+    /// You'll get an iterator yielding key value pairs.
     fn parse(cmdline: &str) -> ArgumentIterator<Self> where Self: ToString + Sized;
 }
 
+/// custom derive for the [`Key`] trait
+///
+/// [`Key`]: trait.Key.html
 #[cfg(feature = "derive")]
 pub use miniarg_derive::Key;
 
