@@ -1,3 +1,8 @@
+//! custom derives for [miniarg]
+//!
+//! [miniarg]: https://github.com/YtvwlD/miniarg
+#![doc(html_root_url = "https://docs.rs/miniarg_derive/0.1.0")]
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn;

@@ -2,13 +2,20 @@
 name = "miniarg_derive"
 version = "0.1.0"
 authors = ["Niklas Sombert <niklas@ytvwld.de>"]
+description = "custom derive for miniarg"
+readme = "README.md"
 edition = "2018"
 license = "MPL-2.0"
+repository = "https://github.com/YtvwlD/miniarg"
 
 [lib]
 proc-macro = true
+path = "src/lib.rs"
 
 [dependencies]
 syn = "1.0"
 quote = "1.0"
 proc-macro2 = "1.0"
+
+[dev-dependencies]
+version-sync = "0.9"
