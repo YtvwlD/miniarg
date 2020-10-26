@@ -10,7 +10,7 @@ Only cmdlines in the form of `program -foo value -bar value` are supported.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-miniarg = "0.1"
+miniarg = "0.2"
 ```
 The feature `std` is enabled by default and `alloc` and `derive` are optional.
 

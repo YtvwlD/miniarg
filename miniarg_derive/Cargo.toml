@@ -1,6 +1,6 @@
 [package]
 name = "miniarg_derive"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Niklas Sombert <niklas@ytvwld.de>"]
 description = "custom derive for miniarg"
 readme = "README.md"
