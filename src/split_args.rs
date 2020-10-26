@@ -68,44 +68,51 @@ impl<'a> Iterator for SplitArgs<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use alloc::{vec::Vec, vec};
     
     #[test]
     /// one continuous string
     fn basic() {
-        let parsed: Vec<&str> = SplitArgs::new("string").collect();
-        assert_eq!(parsed, vec!["string"]);
+        let mut parsed = SplitArgs::new("string");
+        assert_eq!(parsed.next(), Some("string"));
+        assert_eq!(parsed.next(), None);
     }
     
     #[test]
     /// two strings
     fn two() {
-        let parsed: Vec<&str> = SplitArgs::new("string1 string2").collect();
-        assert_eq!(parsed, vec!["string1", "string2"]);
+        let mut parsed = SplitArgs::new("string1 string2");
+        assert_eq!(parsed.next(), Some("string1"));
+        assert_eq!(parsed.next(), Some("string2"));
+        assert_eq!(parsed.next(), None);
     }
     
     #[test]
     /// one string in quotes
     fn quotes()
     {
-        let parsed: Vec<&str> = SplitArgs::new("\"string1 string2\"").collect();
-        assert_eq!(parsed, vec!["string1 string2"]);
+        let mut parsed = SplitArgs::new("\"string1 string2\"");
+        assert_eq!(parsed.next(), Some("string1 string2"));
+        assert_eq!(parsed.next(), None);
     }
     
     #[test]
     /// one string in quotes
     fn quotes_two()
     {
-        let parsed: Vec<&str> = SplitArgs::new("\"1 2\" \"3 4\"").collect();
-        assert_eq!(parsed, vec!["1 2", "3 4"]);
+        let mut parsed = SplitArgs::new("\"1 2\" \"3 4\"");
+        assert_eq!(parsed.next(), Some("1 2"));
+        assert_eq!(parsed.next(), Some("3 4"));
+        assert_eq!(parsed.next(), None);
     }
     
     #[test]
     /// one string in quotes, two without
     fn quotes_no_quotes()
     {
-        let parsed: Vec<&str> = SplitArgs::new("1 \"2 3 4\" 5").collect();
-        assert_eq!(parsed, vec!["1", "2 3 4", "5"]);
+        let mut parsed = SplitArgs::new("1 \"2 3 4\" 5");
+        assert_eq!(parsed.next(), Some("1"));
+        assert_eq!(parsed.next(), Some("2 3 4"));
+        assert_eq!(parsed.next(), Some("5"));
+        assert_eq!(parsed.next(), None);
     }
 }
