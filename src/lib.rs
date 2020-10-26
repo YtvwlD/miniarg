@@ -166,7 +166,13 @@ where T: ToString, S: Iterator<Item = &'a str> {
         loop {
             let arg = match self.args.next() {
                 Some(a) => a,
-                None => return None,
+                None => return match self.last {
+                    Some(l) => {
+                        self.last = None;
+                        Some(Ok((l, "")))
+                    },
+                    None => None,
+                },
             };
             if let Some(l) = self.last {
                 // the last element was a key

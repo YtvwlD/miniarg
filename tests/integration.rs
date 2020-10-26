@@ -48,10 +48,14 @@ fn key_two_value() {
 }
 
 #[test]
-/// Just a key should produce an empty vec.
-fn value_missing() {
+/// Just a key should produce a vec containing the key and an empty string.
+// This is used for `-help`.
+fn just_key() {
     let cmdline = "executable -key";
-    assert_eq!(parse(&cmdline, &["key"]).collect::<Result<Vec<_>, _>>().unwrap(), vec![]);
+    assert_eq!(
+        parse(&cmdline, &["key"]).collect::<Result<Vec<_>, _>>().unwrap(),
+        vec![(&"key", "")]
+    );
 }
 
 #[test]
