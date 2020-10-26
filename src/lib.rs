@@ -71,13 +71,12 @@
 //! [`ParseError`]: enum.ParseError.html
 #![doc(html_root_url = "https://docs.rs/miniarg/0.1.0")]
 #![cfg_attr(not(feature = "std"), no_std)]
+#[cfg(feature = "alloc")]
 extern crate alloc;
 use core::iter::Skip;
 use core::fmt;
-#[cfg(any(feature = "alloc", feature = "std"))]
-use alloc::{
-    string::{String, ToString},
-};
+#[cfg(feature = "alloc")]
+use alloc::string::{String, ToString};
 #[cfg(feature = "std")]
 use std::error::Error;
 
@@ -87,17 +86,17 @@ mod split_args;
 use split_args::SplitArgs;
 
 // This is a bit of a hack to allow building without std and without alloc.
-#[cfg(not(any(feature = "alloc", feature = "std")))]
+#[cfg(not(feature = "alloc"))]
 pub trait ToString {
     fn to_string(&self) -> &str;
 }
-#[cfg(not(any(feature = "alloc", feature = "std")))]
+#[cfg(not(feature = "alloc"))]
 impl<'b> ToString for &str {
     fn to_string(&self) -> &str {
         self
     }
 }
-#[cfg(not(any(feature = "std")))]
+#[cfg(not(feature = "std"))]
 trait Error {}
 
 /// Parse the command line.
@@ -186,8 +185,8 @@ impl<'a> fmt::Display for ParseError<'a> {
 }
 impl<'a> Error for ParseError<'a> {}
 
-#[cfg(all(feature = "derive", not(any(feature = "alloc", feature = "std"))))]
-compile_error!("either `std` or `alloc` feature is currently required to get the derive feature");
+#[cfg(all(feature = "derive", not(feature = "alloc")))]
+compile_error!("at least the `alloc` feature is currently required to get the derive feature");
 
 
 /// The main trait.
@@ -228,7 +227,7 @@ pub trait Key {
 pub use miniarg_derive::Key;
 
 /// Turn the first character into lowercase.
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "alloc")]
 fn first_lower(input: &str) -> String {
     // taken from https://stackoverflow.com/a/38406885/2192464
     let mut c = input.chars();

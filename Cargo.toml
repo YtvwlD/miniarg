@@ -21,6 +21,6 @@ version-sync = "0.9"
 
 [features]
 default = ["std"]
-std = []
+std = ["alloc"]
 alloc = []
 derive = ["miniarg_derive"]
