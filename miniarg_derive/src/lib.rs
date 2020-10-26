@@ -27,6 +27,7 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
         _ => panic!("only enums are supported"),
     };
     let mut variants = syn::punctuated::Punctuated::<_, syn::token::Comma>::new();
+    let mut help_strings = Vec::new();
     for variant in &data.variants {
         let mut path = syn::punctuated::Punctuated::<syn::PathSegment, syn::token::Colon2>::new();
         path.push(syn::PathSegment {
@@ -41,7 +42,18 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
             leading_colon: None,
             segments: path,
         });
+        let doc = variant.attrs.iter().map(|a| a.parse_meta().unwrap()).find(|m| m.path().is_ident("doc")).map(|m|
+            match m {
+                syn::Meta::NameValue(mnv) => match mnv.lit {
+                    syn::Lit::Str(s) => s.value(),
+                    _ => panic!(),
+                },
+                _ => panic!(),
+            }
+        ).unwrap_or("".to_string());
+        help_strings.push(format!("-{}\t{}", first_lower(&variant.ident.to_string()), doc));
     }
+    let help_text = help_strings.join("\n");
     let gen = quote! {
         impl fmt::Display for #name {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -53,7 +65,22 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
             fn parse(cmdline: &str) -> ArgumentIterator<Self, miniarg::split_args::SplitArgs> {
                 miniarg::parse(cmdline, &[#variants])
             }
+            
+            fn help_text() -> &'static str {
+                #help_text
+            }
         }
     };
     gen.into()
+}
+
+/// Turn the first character into lowercase.
+// This has to be duplicated because of proc_macro.
+fn first_lower(input: &str) -> String {
+    // taken from https://stackoverflow.com/a/38406885/2192464
+    let mut c = input.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_lowercase().collect::<String>() + c.as_str(),
+    }
 }

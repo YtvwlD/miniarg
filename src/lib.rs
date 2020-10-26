@@ -73,6 +73,9 @@
 //! # Ok::<(), miniarg::ParseError<'static>>(())
 //! ```
 //!
+//! In this case a help text is generated from the documentation comments on your enum kinds,
+//! `help_text()` retrieves it.
+//!
 //! The code never panics, but the returned iterator will contain [`ParseError`]s
 //! if anything goes wrong.
 //!
@@ -248,6 +251,11 @@ pub trait Key {
     ///
     /// You'll get an iterator yielding key value pairs.
     fn parse(cmdline: &str) -> ArgumentIterator<Self, SplitArgs> where Self: ToString + Sized;
+    
+    /// Get a help text.
+    ///
+    /// This is being created from the enum kinds and their documentation comments.
+    fn help_text() -> &'static str;
 }
 
 /// custom derive for the [`Key`] trait

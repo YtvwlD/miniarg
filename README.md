@@ -72,6 +72,9 @@ let args = MyKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>()?;
 assert_eq!(args, vec![(&MyKeys::Foo, "value"), (&MyKeys::Bar, "value")]);
 ```
 
+In this case a help text is generated from the documentation comments on your enum kinds,
+`help_text()` retrieves it.
+
 The code never panics, but the returned iterator will contain [`ParseError`]s
 if anything goes wrong.
 

@@ -7,8 +7,11 @@ use miniarg::{Key, ArgumentIterator, ParseError};
 
 #[derive(Debug, Key, PartialEq, Eq, Hash)]
 enum SimpleKeys {
+    /// first key
     Key,
+    /// second key
     Key1,
+    // no documentation here
     Key2,
 }
 
@@ -79,5 +82,14 @@ fn missing_key() {
     assert_eq!(
         SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
         ParseError::NotAKey("value")
+    );
+}
+
+#[test]
+/// A help string should be generated.
+fn help_text() {
+    assert_eq!(
+        SimpleKeys::help_text(),
+        "-key\t first key\n-key1\t second key\n-key2\t"
     );
 }
