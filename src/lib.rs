@@ -67,8 +67,11 @@
 //! The code never panics, but the returned iterator will contain [`ParseError`]s
 //! if anything goes wrong.
 //!
+//! You might also want to take a look at the [`split_args`] module for lower level access.
+//!
 //! [`ToString`]: https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html
 //! [`ParseError`]: enum.ParseError.html
+//! [`split_args`]: split_args/index.html
 #![doc(html_root_url = "https://docs.rs/miniarg/0.1.0")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #[cfg(feature = "alloc")]
@@ -82,7 +85,7 @@ use std::error::Error;
 
 use cfg_if::cfg_if;
 
-mod split_args;
+pub mod split_args;
 use split_args::SplitArgs;
 
 // This is a bit of a hack to allow building without std and without alloc.

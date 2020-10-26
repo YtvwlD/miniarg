@@ -1,13 +1,37 @@
 //! Splits a cmdline into multiple args.
+//!
+//! # Usage
+//!
+//! ```
+//! # use miniarg::split_args::SplitArgs;
+//! let mut args = SplitArgs::new("executable param1 \"param2, but with spaces\" param3");
+//! assert_eq!(args.next(), Some("executable"));
+//! assert_eq!(args.next(), Some("param1"));
+//! assert_eq!(args.next(), Some("param2, but with spaces"));
+//! assert_eq!(args.next(), Some("param3"));
+//! assert_eq!(args.next(), None);
+//! ```
+//!
+//! It never panics or errors.
 
-pub(crate) struct SplitArgs<'a> {
+/// Splits a cmdline into multiple args.
+///
+/// See the [module documentation] for more details.
+///
+/// [module documentation]: index.html
+pub struct SplitArgs<'a> {
     cmdline: &'a str,
     index: usize,
     quotes_begin: Option<usize>,
 }
 
 impl SplitArgs<'_> {
-    pub(crate) fn new<'a>(cmdline: &'a str) -> SplitArgs<'a> {
+    /// Creates from a cmdline.
+    ///
+    /// See the [module documentation] for more details.
+    ///
+    /// [module documentation]: index.html
+    pub fn new<'a>(cmdline: &'a str) -> SplitArgs<'a> {
         SplitArgs {
             cmdline,
             index: 0,
@@ -19,6 +43,7 @@ impl SplitArgs<'_> {
 impl<'a> Iterator for SplitArgs<'a> {
     type Item = &'a str;
     
+    /// Get the next parameter.
     fn next(&mut self) -> Option<Self::Item> {
         let mut index = self.index;
         if self.index >= self.cmdline.len() {

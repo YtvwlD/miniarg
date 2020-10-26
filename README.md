@@ -66,7 +66,10 @@ assert_eq!(args, vec![(&MyKeys::Foo, "value"), (&MyKeys::Bar, "value")]);
 The code never panics, but the returned iterator will contain [`ParseError`]s
 if anything goes wrong.
 
+You might also want to take a look at the [`split_args`] module for lower level access.
+
 [`ToString`]: https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html
 [`ParseError`]: enum.ParseError.html
+[`split_args`]: split_args/index.html
 
 License: MPL-2.0
