@@ -50,7 +50,7 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
         }
         
         impl Key for #name {
-            fn parse(cmdline: &str) -> ArgumentIterator<Self> {
+            fn parse(cmdline: &str) -> ArgumentIterator<Self, miniarg::split_args::SplitArgs> {
                 miniarg::parse(cmdline, &[#variants])
             }
         }

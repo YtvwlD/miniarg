@@ -24,6 +24,15 @@ assert_eq!(args.next(), Some(Ok((&"key", "value"))));
 assert_eq!(args.next(), None);
 ```
 
+If you don't want to pass a cmdline, you can use an iterator instead:
+
+```rust
+let iter = vec!["executable", "-key", "value"].into_iter();
+let mut args = miniarg::parse_from_iter(iter, &["key"]);
+assert_eq!(args.next(), Some(Ok((&"key", "value"))));
+assert_eq!(args.next(), None);
+```
+
 You can use `collect::<Result<Vec<_>, _>>()` to get a `Vec`:
 ```rust
 let cmdline = "executable -key value";

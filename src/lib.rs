@@ -22,6 +22,15 @@
 //! assert_eq!(args.next(), None);
 //! ```
 //!
+//! If you don't want to pass a cmdline, you can use an iterator instead:
+//!
+//! ```
+//! let iter = vec!["executable", "-key", "value"].into_iter();
+//! let mut args = miniarg::parse_from_iter(iter, &["key"]);
+//! assert_eq!(args.next(), Some(Ok((&"key", "value"))));
+//! assert_eq!(args.next(), None);
+//! ```
+//!
 //! You can use `collect::<Result<Vec<_>, _>>()` to get a `Vec`:
 //! ```
 //! let cmdline = "executable -key value";
@@ -105,30 +114,48 @@ trait Error {}
 /// Parse the command line.
 ///
 /// See the main crate documentation for more details and examples.
-pub fn parse<'a, 'b, T>(cmdline: &'a str, options: &'b [T]) -> ArgumentIterator<'a, 'b, T>
+pub fn parse<'a, 'b, T>(
+    cmdline: &'a str, options: &'b [T]
+) -> ArgumentIterator<'a, 'b, T, SplitArgs<'a>>
 where T: ToString {
     let args = SplitArgs::new(cmdline);
-    ArgumentIterator::<'a, 'b, T>::new(args, options)
+    ArgumentIterator::<'a, 'b, T, SplitArgs>::new(args, options)
 }
 
-/// The iterator returned by [`parse`].
+/// Parse from a custom iterator.
+///
+/// It's like [`parse`] but instead of taking a string and splitting it using [`SplitArgs`]
+/// it takes the options from a custom iterator.
+///
+/// See the main crate documentation for more details and examples.
 ///
 /// [`parse`]: fn.parse.html
-pub struct ArgumentIterator<'a, 'b, T> where T: ToString {
-    args: Skip<SplitArgs<'a>>,
+/// [`SplitArgs`]: split_args/struct.SplitArgs.html
+pub fn parse_from_iter<'a, 'b, T, S>(args: S, options: &'b [T]) -> ArgumentIterator<'a, 'b, T, S>
+where T: ToString, S: Iterator<Item = &'a str> {
+    ArgumentIterator::<'a, 'b, T, S>::new(args, options)
+}
+
+/// The iterator returned by [`parse`] and [`parse_from_iter`].
+///
+/// [`parse`]: fn.parse.html
+/// [`parse_from_iter`]: fn.parse_from_iter.html
+pub struct ArgumentIterator<'a, 'b, T, S> where T: ToString, S: Iterator<Item = &'a str> {
+    args: Skip<S>,
     options: &'b [T],
     last: Option<&'b T>,
 }
 
-impl<'a, 'b, T> ArgumentIterator<'a, 'b, T> where T: ToString {
-    fn new(args: SplitArgs<'a>, options: &'b [T]) -> Self {
+impl<'a, 'b, T, S> ArgumentIterator<'a, 'b, T, S> where T: ToString, S: Iterator<Item = &'a str> {
+    fn new(args: S, options: &'b [T]) -> Self {
         // skip argv[0]
         ArgumentIterator {args: args.skip(1), options, last: None}
     }
     
 }
 
-impl<'a, 'b, T> Iterator for ArgumentIterator<'a, 'b, T> where T: ToString {
+impl<'a, 'b, T, S> Iterator for ArgumentIterator<'a, 'b, T, S>
+where T: ToString, S: Iterator<Item = &'a str> {
     type Item = Result<(&'b T, &'a str), ParseError<'a>>;
     
     /// Get the next key pair or an error.
@@ -220,7 +247,7 @@ pub trait Key {
     /// Parse the cmdline.
     ///
     /// You'll get an iterator yielding key value pairs.
-    fn parse(cmdline: &str) -> ArgumentIterator<Self> where Self: ToString + Sized;
+    fn parse(cmdline: &str) -> ArgumentIterator<Self, SplitArgs> where Self: ToString + Sized;
 }
 
 /// custom derive for the [`Key`] trait
