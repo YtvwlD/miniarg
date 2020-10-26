@@ -24,3 +24,6 @@ default = ["std"]
 std = ["alloc"]
 alloc = []
 derive = ["miniarg_derive"]
+
+[patch.crates-io]
+miniarg_derive = { path = "miniarg_derive/" }
