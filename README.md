@@ -2,8 +2,15 @@
 
 A minimal argument parser, with support for no-std and no-alloc
 
-Only cmdlines in the form of `program -foo value -bar value` are supported.
-(That means: values are strings, keys start with a single dash, keys can occur multiple times.)
+It mostly supports cmdlines in the form of `program -foo value -bar value`.
+That means:
+
+* values are strings
+* keys start with a single dash
+* keys can occur multiple times
+
+The last parameter can also be just a key without a value.
+(This can be useful for `-help`.)
 
 ## Usage
 
