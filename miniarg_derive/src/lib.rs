@@ -29,7 +29,7 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
     let mut variants = syn::punctuated::Punctuated::<_, syn::token::Comma>::new();
     let mut help_strings = Vec::new();
     for variant in &data.variants {
-        let mut path = syn::punctuated::Punctuated::<syn::PathSegment, syn::token::Colon2>::new();
+        let mut path = syn::punctuated::Punctuated::<syn::PathSegment, syn::token::PathSep>::new();
         path.push(syn::PathSegment {
             ident: syn::token::SelfType{span: proc_macro2::Span::call_site()}.into(),
             arguments: syn::PathArguments::None,
@@ -42,15 +42,23 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
             leading_colon: None,
             segments: path,
         });
-        let doc = variant.attrs.iter().map(|a| a.parse_meta().unwrap()).find(|m| m.path().is_ident("doc")).map(|m|
-            match m {
-                syn::Meta::NameValue(mnv) => match mnv.lit {
-                    syn::Lit::Str(s) => s.value(),
-                    _ => panic!(),
-                },
-                _ => panic!(),
+        let mut doc = "".to_string();
+        for attr in &variant.attrs {
+            if let syn::Meta::NameValue(mnv) = &attr.meta {
+                if mnv.path.is_ident("doc") {
+                    if let syn::Expr::Lit(l) = &mnv.value {
+                        if let syn::Lit::Str(s) = &l.lit {
+                            doc = s.value();
+                            break;
+                        } else {
+                            panic!("failed to parse {l:?}");
+                        }
+                    } else {
+                        panic!("failed to parse {mnv:?}");
+                    }
+                }
             }
-        ).unwrap_or("".to_string());
+        };
         help_strings.push(format!("-{}\t{}", first_lower(&variant.ident.to_string()), doc));
     }
     let help_text = help_strings.join("\n");
