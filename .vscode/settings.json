@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./miniarg_derive/Cargo.toml"
+    ]
+}
