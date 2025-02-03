@@ -14,6 +14,8 @@
 //!
 //! It never panics or errors.
 
+use crate::str_index::{StrIndex, StrRange};
+
 /// Splits a cmdline into multiple args.
 ///
 /// See the [module documentation] for more details.
@@ -21,71 +23,116 @@
 /// [module documentation]: index.html
 pub struct SplitArgs<'a> {
     cmdline: &'a str,
-    index: usize,
-    quotes_begin: Option<usize>,
+    // Position inside `cmdline`.
+    index: StrIndex,
+    // Tells us the `start` of the current argument.
+    //
+    // This field is `None` if we are not currently parsing any argument.
+    start: Option<StrIndex>,
+    // Tells us whether we are currently trying to parse a quoted argument.
+    in_quotes: bool,
 }
 
-impl SplitArgs<'_> {
+impl<'a> SplitArgs<'a> {
     /// Creates from a cmdline.
     ///
     /// See the [module documentation] for more details.
     ///
     /// [module documentation]: index.html
-    pub fn new<'a>(cmdline: &'a str) -> SplitArgs<'a> {
-        SplitArgs {
+    pub fn new(cmdline: &'a str) -> Self {
+        Self {
             cmdline,
-            index: 0,
-            quotes_begin: None,
+            index: StrIndex::zero(),
+            start: None,
+            in_quotes: false,
         }
     }
 }
 
 impl<'a> Iterator for SplitArgs<'a> {
     type Item = &'a str;
-    
-    /// Get the next parameter.
+
     fn next(&mut self) -> Option<Self::Item> {
-        let mut index = self.index;
-        if self.index >= self.cmdline.len() {
-            return None
-        }
         loop {
-            match self.cmdline.chars().nth(index) {
-                Some('\"') => {
-                    if let Some(q) = self.quotes_begin {
-                        let arg = &self.cmdline[q+1..index];
-                        self.quotes_begin = None;
-                        self.index = index + 2;
-                        return Some(arg)
+            let Some(curr) = self.index.get(self.cmdline) else {
+                // When we finish parsing `cmdline`, we must ensure that we also
+                // return the final argument.
+                match self.start.take() {
+                    Some(start) => return Some(&self.cmdline[start.byte_index()..]),
+                    None => return None,
+                }
+            };
+
+            match curr {
+                '\"' => {
+                    // `in_quotes` tells us whether we are currently in quotes.
+                    // If we are and we encounter a quote, then it must be a
+                    // closing quote, otherwise it is an opening quote.
+                    if self.in_quotes {
+                        let end = self.index;
+                        self.index.advance('\"');
+                        self.in_quotes = false;
+
+                        // SAFETY: We are parsing a closing quote, `start`
+                        //         should have been set when we were parsing
+                        //         the opening quote.
+                        let start = self
+                            .start
+                            .take()
+                            .expect("start should have been set before");
+
+                        let arg = &self.cmdline[StrRange { start, end }];
+                        return Some(arg);
                     } else {
-                        self.quotes_begin = Some(self.index);
-                    }
-                },
-                Some(' ') => {
-                    // Spaces only break args if we're outside of quotes.
-                    if self.quotes_begin.is_none() {
-                        // but spaces after quotes or spaces don't count
-                        match self.cmdline.chars().nth(index-1) {
-                            Some(' ') => {},
-                            Some('\"') => {},
+                        match self.start {
+                            // We are parsing an opening quote here.
+                            None => {
+                                self.index.advance('\"');
+                                self.in_quotes = true;
+                                self.start = Some(self.index);
+                            }
+
+                            // If we reach a quote but `start` is already set,
+                            // then we are in this case: 'value"string...'. In
+                            // this case we are going to return the whole
+                            // argument including the quotes in the middle.
                             Some(_) => {
-                                let arg = &self.cmdline[self.index..index];
-                                self.index = index + 1;
-                                return Some(arg)
-                            },
-                            None => {},
+                                self.index.advance('\"');
+                            }
                         }
                     }
+                }
+
+                // If we encounter a space and we are not currently parsing a quoted
+                // string, then we must return an argument.
+                ' ' if !self.in_quotes => match self.start {
+                    Some(start) => {
+                        let end = self.index;
+                        self.start = None;
+                        self.index.advance(' ');
+
+                        let arg = &self.cmdline[StrRange { start, end }];
+                        return Some(arg);
+                    }
+
+                    // If `start` has not been set, then we are parsing multiple
+                    // whitespace between arguments. Simply ignore it and move on.
+                    None => {
+                        self.index.advance(' ');
+                    }
                 },
-                Some(_) => {}, // Ignore other characters
-                None => {
-                    // We're at the end.
-                    let arg = &self.cmdline[self.index..index];
-                    self.index = index;
-                    return Some(arg)
-                },
+
+                // If we encounter any other character, then simply set `start`
+                // if it is not already set (this happens when we start parsing
+                // the argument after whitespace) and advance the index.
+                _ => {
+                    if self.start.is_none() {
+                        self.start = Some(self.index);
+                    }
+
+                    self.index.advance(curr);
+                }
             }
-            index += 1;
         }
     }
 }
@@ -93,7 +140,7 @@ impl<'a> Iterator for SplitArgs<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     /// one continuous string
     fn basic() {
@@ -101,7 +148,7 @@ mod tests {
         assert_eq!(parsed.next(), Some("string"));
         assert_eq!(parsed.next(), None);
     }
-    
+
     #[test]
     /// two strings
     fn two() {
@@ -110,34 +157,39 @@ mod tests {
         assert_eq!(parsed.next(), Some("string2"));
         assert_eq!(parsed.next(), None);
     }
-    
+
     #[test]
     /// one string in quotes
-    fn quotes()
-    {
+    fn quotes() {
         let mut parsed = SplitArgs::new("\"string1 string2\"");
         assert_eq!(parsed.next(), Some("string1 string2"));
         assert_eq!(parsed.next(), None);
     }
-    
+
     #[test]
     /// one string in quotes
-    fn quotes_two()
-    {
+    fn quotes_two() {
         let mut parsed = SplitArgs::new("\"1 2\" \"3 4\"");
         assert_eq!(parsed.next(), Some("1 2"));
         assert_eq!(parsed.next(), Some("3 4"));
         assert_eq!(parsed.next(), None);
     }
-    
+
     #[test]
     /// one string in quotes, two without
-    fn quotes_no_quotes()
-    {
+    fn quotes_no_quotes() {
         let mut parsed = SplitArgs::new("1 \"2 3 4\" 5");
         assert_eq!(parsed.next(), Some("1"));
         assert_eq!(parsed.next(), Some("2 3 4"));
         assert_eq!(parsed.next(), Some("5"));
         assert_eq!(parsed.next(), None);
+    }
+
+    #[test]
+    fn quotes_in_middle() {
+        let mut parsed = SplitArgs::new("1 2\"3\"4 5");
+        assert_eq!(parsed.next(), Some("1"));
+        assert_eq!(parsed.next(), Some("2\"3\"4"));
+        assert_eq!(parsed.next(), Some("5"));
     }
 }

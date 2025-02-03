@@ -95,14 +95,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #[cfg(feature = "alloc")]
 extern crate alloc;
-use core::iter::Skip;
-use core::fmt;
 #[cfg(feature = "alloc")]
 use alloc::string::{String, ToString};
+use core::fmt;
+use core::iter::Skip;
 #[cfg(feature = "std")]
 use std::error::Error;
 
 use cfg_if::cfg_if;
+
+mod str_index;
 
 pub mod split_args;
 use split_args::SplitArgs;
@@ -125,9 +127,12 @@ trait Error {}
 ///
 /// See the main crate documentation for more details and examples.
 pub fn parse<'a, 'b, T>(
-    cmdline: &'a str, options: &'b [T]
+    cmdline: &'a str,
+    options: &'b [T],
 ) -> ArgumentIterator<'a, 'b, T, SplitArgs<'a>>
-where T: ToString {
+where
+    T: ToString,
+{
     let args = SplitArgs::new(cmdline);
     ArgumentIterator::<'a, 'b, T, SplitArgs>::new(args, options)
 }
@@ -142,7 +147,10 @@ where T: ToString {
 /// [`parse`]: fn.parse.html
 /// [`SplitArgs`]: split_args/struct.SplitArgs.html
 pub fn parse_from_iter<'a, 'b, T, S>(args: S, options: &'b [T]) -> ArgumentIterator<'a, 'b, T, S>
-where T: ToString, S: Iterator<Item = &'a str> {
+where
+    T: ToString,
+    S: Iterator<Item = &'a str>,
+{
     ArgumentIterator::<'a, 'b, T, S>::new(args, options)
 }
 
@@ -150,36 +158,52 @@ where T: ToString, S: Iterator<Item = &'a str> {
 ///
 /// [`parse`]: fn.parse.html
 /// [`parse_from_iter`]: fn.parse_from_iter.html
-pub struct ArgumentIterator<'a, 'b, T, S> where T: ToString, S: Iterator<Item = &'a str> {
+pub struct ArgumentIterator<'a, 'b, T, S>
+where
+    T: ToString,
+    S: Iterator<Item = &'a str>,
+{
     args: Skip<S>,
     options: &'b [T],
     last: Option<&'b T>,
 }
 
-impl<'a, 'b, T, S> ArgumentIterator<'a, 'b, T, S> where T: ToString, S: Iterator<Item = &'a str> {
+impl<'a, 'b, T, S> ArgumentIterator<'a, 'b, T, S>
+where
+    T: ToString,
+    S: Iterator<Item = &'a str>,
+{
     fn new(args: S, options: &'b [T]) -> Self {
         // skip argv[0]
-        ArgumentIterator {args: args.skip(1), options, last: None}
+        ArgumentIterator {
+            args: args.skip(1),
+            options,
+            last: None,
+        }
     }
-    
 }
 
 impl<'a, 'b, T, S> Iterator for ArgumentIterator<'a, 'b, T, S>
-where T: ToString, S: Iterator<Item = &'a str> {
+where
+    T: ToString,
+    S: Iterator<Item = &'a str>,
+{
     type Item = Result<(&'b T, &'a str), ParseError<'a>>;
-    
+
     /// Get the next key pair or an error.
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             let arg = match self.args.next() {
                 Some(a) => a,
-                None => return match self.last {
-                    Some(l) => {
-                        self.last = None;
-                        Some(Ok((l, "")))
-                    },
-                    None => None,
-                },
+                None => {
+                    return match self.last {
+                        Some(l) => {
+                            self.last = None;
+                            Some(Ok((l, "")))
+                        }
+                        None => None,
+                    }
+                }
             };
             if let Some(l) = self.last {
                 // the last element was a key
@@ -198,10 +222,10 @@ where T: ToString, S: Iterator<Item = &'a str> {
                         }
                     } == a);
                     if self.last.is_none() {
-                        return Some(Err(ParseError::UnknownKey(a)))
+                        return Some(Err(ParseError::UnknownKey(a)));
                     }
                 } else {
-                    return Some(Err(ParseError::NotAKey(arg)))
+                    return Some(Err(ParseError::NotAKey(arg)));
                 }
             }
         }
@@ -234,7 +258,6 @@ impl<'a> Error for ParseError<'a> {}
 #[cfg(all(feature = "derive", not(feature = "alloc")))]
 compile_error!("at least the `alloc` feature is currently required to get the derive feature");
 
-
 /// The main trait.
 ///
 /// Derive this with an enum to get the functionality.
@@ -263,8 +286,10 @@ pub trait Key {
     /// Parse the cmdline.
     ///
     /// You'll get an iterator yielding key value pairs.
-    fn parse(cmdline: &str) -> ArgumentIterator<Self, SplitArgs> where Self: ToString + Sized;
-    
+    fn parse(cmdline: &str) -> ArgumentIterator<Self, SplitArgs>
+    where
+        Self: ToString + Sized;
+
     /// Get a help text.
     ///
     /// This is being created from the enum kinds and their documentation comments.
