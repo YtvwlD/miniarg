@@ -94,3 +94,23 @@ fn help_text() {
         "-key\t first key\n-key1\t second key\n-key2\t"
     );
 }
+
+#[test]
+/// Just calling a binary should produce an empty result.
+fn non_ascii_basic() {
+    let cmdline = "€x€cütäbl€";
+    assert_eq!(
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        Vec::new()
+    );
+}
+
+#[test]
+/// One key, one value.
+fn non_ascii_key_value() {
+    let cmdline = "executable -key 🦀🎉";
+    assert_eq!(
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        vec![(&SimpleKeys::Key, "🦀🎉")]
+    );
+}

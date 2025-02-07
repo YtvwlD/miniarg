@@ -93,7 +93,31 @@ fn missing_key() {
 }
 
 #[test]
-fn non_ascii() {
+/// Just calling a binary should produce an empty result.
+fn non_ascii_basic() {
+    let cmdline = "€x€cütäbl€";
+    assert_eq!(
+        parse::<&str>(&cmdline, &[])
+            .collect::<Result<Vec<(_, _)>, _>>()
+            .unwrap(),
+        Vec::new()
+    );
+}
+
+#[test]
+/// One key, one value.
+fn non_ascii_key() {
+    let cmdline = "executable -😀 value";
+    assert_eq!(
+        parse(&cmdline, &["😀"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"😀", "value")]
+    );
+}
+
+#[test]
+fn non_ascii_value() {
     let cmdline = "executable -value 🦀🎉";
     assert_eq!(
         parse(&cmdline, &["value"])

@@ -192,4 +192,29 @@ mod tests {
         assert_eq!(parsed.next(), Some("2\"3\"4"));
         assert_eq!(parsed.next(), Some("5"));
     }
+
+    #[test]
+    /// one continuous string
+    fn non_ascii_basic() {
+        let mut parsed = SplitArgs::new("strÄng");
+        assert_eq!(parsed.next(), Some("strÄng"));
+        assert_eq!(parsed.next(), None);
+    }
+
+    #[test]
+    /// two strings
+    fn non_ascii_two() {
+        let mut parsed = SplitArgs::new("sträng1 sträng2");
+        assert_eq!(parsed.next(), Some("sträng1"));
+        assert_eq!(parsed.next(), Some("sträng2"));
+        assert_eq!(parsed.next(), None);
+    }
+
+    #[test]
+    /// one string in quotes
+    fn non_ascii_quotes() {
+        let mut parsed = SplitArgs::new("\"sträng1 sträng2\"");
+        assert_eq!(parsed.next(), Some("sträng1 sträng2"));
+        assert_eq!(parsed.next(), None);
+    }
 }
