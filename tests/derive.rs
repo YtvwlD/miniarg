@@ -13,6 +13,8 @@ enum SimpleKeys {
     Key1,
     // no documentation here
     Key2,
+    /// Th€ döcüm€ntätiön änd th€ k€y häv€ nön-äscii chärs.
+    Köy,
 }
 
 #[test]
@@ -91,7 +93,7 @@ fn missing_key() {
 fn help_text() {
     assert_eq!(
         SimpleKeys::help_text(),
-        "-key\t first key\n-key1\t second key\n-key2\t"
+        "-key\t first key\n-key1\t second key\n-key2\t\n-köy\t Th€ döcüm€ntätiön änd th€ k€y häv€ nön-äscii chärs."
     );
 }
 
@@ -107,7 +109,17 @@ fn non_ascii_basic() {
 
 #[test]
 /// One key, one value.
-fn non_ascii_key_value() {
+fn non_ascii_key() {
+    let cmdline = "executable -köy value";
+    assert_eq!(
+        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        vec![(&SimpleKeys::Köy, "value")]
+    );
+}
+
+#[test]
+/// One key, one value.
+fn non_ascii_value() {
     let cmdline = "executable -key 🦀🎉";
     assert_eq!(
         SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
