@@ -5,7 +5,7 @@
 extern crate alloc;
 use alloc::{vec, vec::Vec};
 
-use miniarg::{parse, ParseError};
+use miniarg::{ParseError, parse};
 
 #[test]
 /// Just calling a binary should produce an empty result.

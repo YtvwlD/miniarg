@@ -202,7 +202,7 @@ where
                             Some(Ok((l, "")))
                         }
                         None => None,
-                    }
+                    };
                 }
             };
             if let Some(l) = self.last {

@@ -3,7 +3,7 @@
 
 use core::fmt;
 
-use miniarg::{Key, ArgumentIterator, ParseError};
+use miniarg::{ArgumentIterator, Key, ParseError};
 
 #[derive(Debug, Key, PartialEq, Eq, Hash)]
 enum SimpleKeys {
@@ -22,7 +22,9 @@ enum SimpleKeys {
 fn basic() {
     let cmdline = "executable";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
         Vec::new()
     );
 }
@@ -32,7 +34,9 @@ fn basic() {
 fn key_value() {
     let cmdline = "executable -key value";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
         vec![(&SimpleKeys::Key, "value")]
     );
 }
@@ -42,7 +46,9 @@ fn key_value() {
 fn two_key_value() {
     let cmdline = "executable -key1 value1 -key2 value2";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
         vec![(&SimpleKeys::Key1, "value1"), (&SimpleKeys::Key2, "value2")]
     );
 }
@@ -52,7 +58,9 @@ fn two_key_value() {
 fn key_two_value() {
     let cmdline = "executable -key value1 -key value2";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
         vec![(&SimpleKeys::Key, "value1"), (&SimpleKeys::Key, "value2")]
     );
 }
@@ -63,7 +71,9 @@ fn key_two_value() {
 fn just_key() {
     let cmdline = "executable -key";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
         vec![(&SimpleKeys::Key, "")]
     );
 }
@@ -73,7 +83,9 @@ fn just_key() {
 fn invalid_key() {
     let cmdline = "executable -invalid";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap_err(),
         ParseError::UnknownKey("invalid")
     );
 }
@@ -83,7 +95,9 @@ fn invalid_key() {
 fn missing_key() {
     let cmdline = "executable value";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap_err(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap_err(),
         ParseError::NotAKey("value")
     );
 }
@@ -102,7 +116,9 @@ fn help_text() {
 fn non_ascii_basic() {
     let cmdline = "€x€cütäbl€";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
         Vec::new()
     );
 }
@@ -112,7 +128,9 @@ fn non_ascii_basic() {
 fn non_ascii_key() {
     let cmdline = "executable -köy value";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
         vec![(&SimpleKeys::Köy, "value")]
     );
 }
@@ -122,7 +140,9 @@ fn non_ascii_key() {
 fn non_ascii_value() {
     let cmdline = "executable -key 🦀🎉";
     assert_eq!(
-        SimpleKeys::parse(&cmdline).collect::<Result<Vec<_>, _>>().unwrap(),
+        SimpleKeys::parse(&cmdline)
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
         vec![(&SimpleKeys::Key, "🦀🎉")]
     );
 }

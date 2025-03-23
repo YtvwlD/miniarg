@@ -4,7 +4,7 @@ version = "0.4.0"
 authors = ["Niklas Sombert <niklas@ytvwld.de>"]
 description = "custom derive for miniarg"
 readme = "README.md"
-edition = "2021"
+edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/YtvwlD/miniarg"
 

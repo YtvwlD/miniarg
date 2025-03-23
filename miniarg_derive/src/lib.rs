@@ -31,7 +31,10 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
     for variant in &data.variants {
         let mut path = syn::punctuated::Punctuated::<syn::PathSegment, syn::token::PathSep>::new();
         path.push(syn::PathSegment {
-            ident: syn::token::SelfType{span: proc_macro2::Span::call_site()}.into(),
+            ident: syn::token::SelfType {
+                span: proc_macro2::Span::call_site(),
+            }
+            .into(),
             arguments: syn::PathArguments::None,
         });
         path.push(syn::PathSegment {
@@ -46,40 +49,47 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
         for attr in &variant.attrs {
             if let syn::Meta::NameValue(mnv) = &attr.meta {
                 if mnv.path.is_ident("doc") {
-                    if let syn::Expr::Lit(l) = &mnv.value {
-                        if let syn::Lit::Str(s) = &l.lit {
-                            doc = s.value();
-                            break;
-                        } else {
-                            panic!("failed to parse {l:?}");
+                    match &mnv.value {
+                        syn::Expr::Lit(l) => {
+                            if let syn::Lit::Str(s) = &l.lit {
+                                doc = s.value();
+                                break;
+                            } else {
+                                panic!("failed to parse {l:?}");
+                            }
                         }
-                    } else {
-                        panic!("failed to parse {mnv:?}");
+                        _ => {
+                            panic!("failed to parse {mnv:?}");
+                        }
                     }
                 }
             }
-        };
-        help_strings.push(format!("-{}\t{}", first_lower(&variant.ident.to_string()), doc));
+        }
+        help_strings.push(format!(
+            "-{}\t{}",
+            first_lower(&variant.ident.to_string()),
+            doc
+        ));
     }
     let help_text = help_strings.join("\n");
-    let gen = quote! {
+    let generated = quote! {
         impl fmt::Display for #name {
             fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
                 fmt::Debug::fmt(self, f)
             }
         }
-        
+
         impl Key for #name {
             fn parse(cmdline: &str) -> ArgumentIterator<Self, miniarg::split_args::SplitArgs> {
                 miniarg::parse(cmdline, &[#variants])
             }
-            
+
             fn help_text() -> &'static str {
                 #help_text
             }
         }
     };
-    gen.into()
+    generated.into()
 }
 
 /// Turn the first character into lowercase.

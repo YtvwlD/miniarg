@@ -1,7 +1,7 @@
 //! Integration tests for the no alloc case.
 //! These are almost the same as main file, but without `collect`.
 #![no_std]
-use miniarg::{parse, ParseError};
+use miniarg::{ParseError, parse};
 
 #[test]
 /// Just calling a binary should produce an empty result.
