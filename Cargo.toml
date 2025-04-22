@@ -23,7 +23,7 @@ version-sync = "0.9"
 default = ["std"]
 std = ["alloc"]
 alloc = []
-derive = ["miniarg_derive"]
+derive = ["dep:miniarg_derive"]
 
 [patch.crates-io]
 miniarg_derive = { path = "miniarg_derive/" }
