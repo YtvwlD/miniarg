@@ -244,7 +244,7 @@ pub enum ParseError<'a> {
     _Unknown,
 }
 
-impl<'a> fmt::Display for ParseError<'a> {
+impl fmt::Display for ParseError<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             Self::NotAKey(s) => write!(f, "expected '{}' to start with a dash", s),
@@ -253,7 +253,7 @@ impl<'a> fmt::Display for ParseError<'a> {
         }
     }
 }
-impl<'a> Error for ParseError<'a> {}
+impl Error for ParseError<'_> {}
 
 #[cfg(all(feature = "derive", not(feature = "alloc")))]
 compile_error!("at least the `alloc` feature is currently required to get the derive feature");
