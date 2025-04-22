@@ -5,7 +5,6 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn;
 
 // taken in parts from
 // https://doc.rust-lang.org/book/ch19-06-macros.html#how-to-write-a-custom-derive-macro
