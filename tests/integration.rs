@@ -126,3 +126,102 @@ fn non_ascii_value() {
         vec![(&"value", "🦀🎉")]
     );
 }
+
+#[test]
+fn other_whitespace() {
+    let cmdline = "executable -value\targ";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "arg")]
+    );
+}
+
+#[test]
+fn single_quotes() {
+    let cmdline = "executable -value 'test value'";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "test value")]
+    );
+}
+
+#[test]
+fn double_quotes() {
+    let cmdline = "executable -value \"test value\"";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "test value")]
+    );
+}
+
+#[test]
+fn nested_single_quotes() {
+    let cmdline = "executable -value \"te'st' value\"";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "te'st' value")]
+    );
+}
+
+#[test]
+fn nested_double_quotes() {
+    let cmdline = "executable -value 'te\"st\" value'";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "te\"st\" value")]
+    );
+}
+
+#[test]
+fn nested_single_quote() {
+    let cmdline = "executable -value \"te'st value\"";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "te'st value")]
+    );
+}
+
+#[test]
+fn nested_double_quote() {
+    let cmdline = "executable -value 'te\"st value'";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "te\"st value")]
+    );
+}
+
+#[test]
+fn ends_inside_single_quotes() {
+    let cmdline = "executable -value 'test value";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "test value")]
+    );
+}
+
+#[test]
+fn ends_inside_double_quotes() {
+    let cmdline = "executable -value \"test value";
+    assert_eq!(
+        parse(&cmdline, &["value"])
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap(),
+        vec![(&"value", "test value")]
+    );
+}

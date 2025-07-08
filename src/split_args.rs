@@ -14,7 +14,9 @@
 //!
 //! It never panics or errors.
 
-use crate::str_index::{StrIndex, StrRange};
+use core::iter::FusedIterator;
+
+use crate::parse::{Char, Quote, StrChars, StrIndex, StrRange};
 
 /// Splits a cmdline into multiple args.
 ///
@@ -22,15 +24,7 @@ use crate::str_index::{StrIndex, StrRange};
 ///
 /// [module documentation]: index.html
 pub struct SplitArgs<'a> {
-    cmdline: &'a str,
-    // Position inside `cmdline`.
-    index: StrIndex,
-    // Tells us the `start` of the current argument.
-    //
-    // This field is `None` if we are not currently parsing any argument.
-    start: Option<StrIndex>,
-    // Tells us whether we are currently trying to parse a quoted argument.
-    in_quotes: bool,
+    iter: StrChars<'a>,
 }
 
 impl<'a> SplitArgs<'a> {
@@ -41,11 +35,18 @@ impl<'a> SplitArgs<'a> {
     /// [module documentation]: index.html
     pub fn new(cmdline: &'a str) -> Self {
         Self {
-            cmdline,
-            index: StrIndex::zero(),
-            start: None,
-            in_quotes: false,
+            iter: StrChars::new(cmdline),
         }
+    }
+
+    /// Get the substring `start..end`.
+    ///
+    /// # Panics
+    ///
+    /// If `start..end` is not valid.
+    fn get_range(&self, start: StrIndex, end: StrIndex) -> &'a str {
+        let range = StrRange { start, end };
+        range.get(self.iter.get()).expect("range should be valid")
     }
 }
 
@@ -54,167 +55,126 @@ impl<'a> Iterator for SplitArgs<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let Some(curr) = self.index.get(self.cmdline) else {
-                // When we finish parsing `cmdline`, we must ensure that we also
-                // return the final argument.
-                match self.start.take() {
-                    Some(start) => return Some(&self.cmdline[start.byte_index()..]),
-                    None => return None,
+            let c = self.iter.peek()?;
+
+            match c {
+                Char::Whitespace => {
+                    self.iter.advance();
+                    continue;
                 }
-            };
 
-            match curr {
-                '\"' => {
-                    // `in_quotes` tells us whether we are currently in quotes.
-                    // If we are and we encounter a quote, then it must be a
-                    // closing quote, otherwise it is an opening quote.
-                    if self.in_quotes {
-                        let end = self.index;
-                        self.index.advance('\"');
-                        self.in_quotes = false;
+                Char::Letter(_) => {
+                    let start = self.iter.pos();
+                    self.iter.advance();
 
-                        // SAFETY: We are parsing a closing quote, `start`
-                        //         should have been set when we were parsing
-                        //         the opening quote.
-                        let start = self
-                            .start
-                            .take()
-                            .expect("start should have been set before");
-
-                        let arg = &self.cmdline[StrRange { start, end }];
-                        return Some(arg);
-                    } else {
-                        match self.start {
-                            // We are parsing an opening quote here.
-                            None => {
-                                self.index.advance('\"');
-                                self.in_quotes = true;
-                                self.start = Some(self.index);
+                    while let Some(c) = self.iter.peek() {
+                        match c {
+                            Char::Letter(_) | Char::Quote(_) => {
+                                self.iter.advance();
                             }
 
-                            // If we reach a quote but `start` is already set,
-                            // then we are in this case: 'value"string...'. In
-                            // this case we are going to return the whole
-                            // argument including the quotes in the middle.
-                            Some(_) => {
-                                self.index.advance('\"');
+                            Char::Whitespace => {
+                                let end = self.iter.pos();
+                                self.iter.advance();
+
+                                // SAFETY: `start` and `end` are obtained via
+                                //         the iterator, so they must be valid.
+                                return Some(self.get_range(start, end));
                             }
                         }
                     }
+
+                    // SAFETY: `start` was obtained via the iterator, so this
+                    //         range must be valid.
+                    return Some(self.get_range(start, self.iter.pos()));
                 }
 
-                // If we encounter a space and we are not currently parsing a quoted
-                // string, then we must return an argument.
-                ' ' if !self.in_quotes => match self.start {
-                    Some(start) => {
-                        let end = self.index;
-                        self.start = None;
-                        self.index.advance(' ');
+                Char::Quote(Quote::Single) => {
+                    self.iter.advance();
+                    let start = self.iter.pos();
 
-                        let arg = &self.cmdline[StrRange { start, end }];
-                        return Some(arg);
+                    while let Some(c) = self.iter.peek() {
+                        match c {
+                            Char::Letter(_) | Char::Whitespace | Char::Quote(Quote::Double) => {
+                                self.iter.advance();
+                            }
+
+                            Char::Quote(Quote::Single) => {
+                                let end = self.iter.pos();
+                                self.iter.advance();
+
+                                // SAFETY: `start` and `end` are obtained via
+                                //         the iterator, so they must be valid.
+                                return Some(self.get_range(start, end));
+                            }
+                        }
                     }
 
-                    // If `start` has not been set, then we are parsing multiple
-                    // whitespace between arguments. Simply ignore it and move on.
-                    None => {
-                        self.index.advance(' ');
-                    }
-                },
+                    // SAFETY: `start` was obtained via the iterator, so this
+                    //         range must be valid.
+                    return Some(self.get_range(start, self.iter.pos()));
+                }
 
-                // If we encounter any other character, then simply set `start`
-                // if it is not already set (this happens when we start parsing
-                // the argument after whitespace) and advance the index.
-                _ => {
-                    if self.start.is_none() {
-                        self.start = Some(self.index);
+                Char::Quote(Quote::Double) => {
+                    self.iter.advance();
+                    let start = self.iter.pos();
+
+                    while let Some(c) = self.iter.peek() {
+                        match c {
+                            Char::Letter(_) | Char::Whitespace | Char::Quote(Quote::Single) => {
+                                self.iter.advance();
+                            }
+
+                            Char::Quote(Quote::Double) => {
+                                let end = self.iter.pos();
+                                self.iter.advance();
+
+                                // SAFETY: `start` and `end` are obtained via
+                                //         the iterator, so they must be valid.
+                                return Some(self.get_range(start, end));
+                            }
+                        }
                     }
 
-                    self.index.advance(curr);
+                    // SAFETY: `start` was obtained via the iterator, so this
+                    //         range must be valid.
+                    return Some(self.get_range(start, self.iter.pos()));
                 }
             }
         }
     }
 }
 
+impl FusedIterator for SplitArgs<'_> {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    /// one continuous string
-    fn basic() {
-        let mut parsed = SplitArgs::new("string");
-        assert_eq!(parsed.next(), Some("string"));
-        assert_eq!(parsed.next(), None);
+    macro_rules! test {
+        ($test:ident: $cmdline:expr => [ $($arg:expr),* ]) => {
+            #[test]
+            fn $test() {
+                let mut parsed = SplitArgs::new($cmdline);
+                $(
+                    assert_eq!(parsed.next(), Some($arg));
+                )*
+                assert_eq!(parsed.next(), None);
+            }
+        };
     }
 
-    #[test]
-    /// two strings
-    fn two() {
-        let mut parsed = SplitArgs::new("string1 string2");
-        assert_eq!(parsed.next(), Some("string1"));
-        assert_eq!(parsed.next(), Some("string2"));
-        assert_eq!(parsed.next(), None);
-    }
-
-    #[test]
-    /// one string in quotes
-    fn quotes() {
-        let mut parsed = SplitArgs::new("\"string1 string2\"");
-        assert_eq!(parsed.next(), Some("string1 string2"));
-        assert_eq!(parsed.next(), None);
-    }
-
-    #[test]
-    /// one string in quotes
-    fn quotes_two() {
-        let mut parsed = SplitArgs::new("\"1 2\" \"3 4\"");
-        assert_eq!(parsed.next(), Some("1 2"));
-        assert_eq!(parsed.next(), Some("3 4"));
-        assert_eq!(parsed.next(), None);
-    }
-
-    #[test]
-    /// one string in quotes, two without
-    fn quotes_no_quotes() {
-        let mut parsed = SplitArgs::new("1 \"2 3 4\" 5");
-        assert_eq!(parsed.next(), Some("1"));
-        assert_eq!(parsed.next(), Some("2 3 4"));
-        assert_eq!(parsed.next(), Some("5"));
-        assert_eq!(parsed.next(), None);
-    }
-
-    #[test]
-    fn quotes_in_middle() {
-        let mut parsed = SplitArgs::new("1 2\"3\"4 5");
-        assert_eq!(parsed.next(), Some("1"));
-        assert_eq!(parsed.next(), Some("2\"3\"4"));
-        assert_eq!(parsed.next(), Some("5"));
-    }
-
-    #[test]
-    /// one continuous string
-    fn non_ascii_basic() {
-        let mut parsed = SplitArgs::new("strÄng");
-        assert_eq!(parsed.next(), Some("strÄng"));
-        assert_eq!(parsed.next(), None);
-    }
-
-    #[test]
-    /// two strings
-    fn non_ascii_two() {
-        let mut parsed = SplitArgs::new("sträng1 sträng2");
-        assert_eq!(parsed.next(), Some("sträng1"));
-        assert_eq!(parsed.next(), Some("sträng2"));
-        assert_eq!(parsed.next(), None);
-    }
-
-    #[test]
-    /// one string in quotes
-    fn non_ascii_quotes() {
-        let mut parsed = SplitArgs::new("\"sträng1 sträng2\"");
-        assert_eq!(parsed.next(), Some("sträng1 sträng2"));
-        assert_eq!(parsed.next(), None);
-    }
+    test!(basic: "string" => ["string"]);
+    test!(two: "string1 string2" => ["string1", "string2"]);
+    test!(single_quotes: "string1 'string2 string3' string4" => ["string1", "string2 string3", "string4"]);
+    test!(double_quotes: "string1 \"string2 string3\" string4" => ["string1", "string2 string3", "string4"]);
+    test!(single_quotes_two: "'1 2' '3 4'" => ["1 2", "3 4"]);
+    test!(double_quotes_two: "\"1 2\" \"3 4\"" => ["1 2", "3 4"]);
+    test!(unterminated_single_quotes: "1 \"2 3 4" => ["1", "2 3 4"]);
+    test!(unterminated_double_quotes: "1 '2 3 4" => ["1", "2 3 4"]);
+    test!(other_whitespace: "1\t2\n3 4\r5" => ["1", "2", "3", "4", "5"]);
+    test!(non_ascii: "string1 rusty🦀 party🎉time string2" => ["string1", "rusty🦀", "party🎉time", "string2"]);
+    test!(non_ascii_basic: "strÄng" => ["strÄng"]);
+    test!(non_ascii_two: "sträng1 sträng2" => ["sträng1", "sträng2"]);
+    test!(non_acsii_quotes: "\"sträng1 sträng2\"" => ["sträng1 sträng2"]);
 }
