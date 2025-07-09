@@ -104,7 +104,7 @@ use std::error::Error;
 
 use cfg_if::cfg_if;
 
-mod str_index;
+mod parse;
 
 pub mod split_args;
 use split_args::SplitArgs;
