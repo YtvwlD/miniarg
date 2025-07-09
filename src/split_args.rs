@@ -33,7 +33,7 @@ impl<'a> SplitArgs<'a> {
     /// See the [module documentation] for more details.
     ///
     /// [module documentation]: index.html
-    pub fn new(cmdline: &'a str) -> Self {
+    pub const fn new(cmdline: &'a str) -> Self {
         Self {
             iter: StrChars::new(cmdline),
         }

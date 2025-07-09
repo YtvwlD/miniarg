@@ -8,14 +8,14 @@ pub struct StrIndex(usize);
 
 impl StrIndex {
     /// Create a new [`StrIndex`] that points at the start of a [`str`].
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Self(0)
     }
 
     /// Get the byte index.
     ///
     /// This can be used to safely index into a [`str`].
-    pub fn byte_index(self) -> usize {
+    pub const fn byte_index(self) -> usize {
         self.0
     }
 
@@ -23,7 +23,7 @@ impl StrIndex {
     ///
     /// This method ensures that the index is always pointing at a [`char`]
     /// boundary.
-    pub fn advance(&mut self, c: char) {
+    pub const fn advance(&mut self, c: char) {
         self.0 += c.len_utf8();
     }
 
@@ -127,7 +127,7 @@ pub struct StrChars<'a> {
 
 impl<'a> StrChars<'a> {
     /// Create a new [`StrChars`].
-    pub fn new(s: &'a str) -> Self {
+    pub const fn new(s: &'a str) -> Self {
         Self {
             s,
             pos: StrIndex::zero(),
@@ -135,14 +135,14 @@ impl<'a> StrChars<'a> {
     }
 
     /// Get the underlying string.
-    pub fn get(&self) -> &'a str {
+    pub const fn get(&self) -> &'a str {
         self.s
     }
 
     /// Get the position of the next codepoint in the string.
     ///
     /// The returned [`StrIndex`] is always valid.
-    pub fn pos(&self) -> StrIndex {
+    pub const fn pos(&self) -> StrIndex {
         self.pos
     }
 
