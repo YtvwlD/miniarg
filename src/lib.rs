@@ -247,8 +247,8 @@ pub enum ParseError<'a> {
 impl fmt::Display for ParseError<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
-            Self::NotAKey(s) => write!(f, "expected '{}' to start with a dash", s),
-            Self::UnknownKey(s) => write!(f, "'{}' is not a known key", s),
+            Self::NotAKey(s) => write!(f, "expected '{s}' to start with a dash"),
+            Self::UnknownKey(s) => write!(f, "'{s}' is not a known key"),
             _ => write!(f, "unknown parse error"),
         }
     }
