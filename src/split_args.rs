@@ -33,6 +33,7 @@ impl<'a> SplitArgs<'a> {
     /// See the [module documentation] for more details.
     ///
     /// [module documentation]: index.html
+    #[must_use]
     pub const fn new(cmdline: &'a str) -> Self {
         Self {
             iter: StrChars::new(cmdline),
@@ -60,7 +61,6 @@ impl<'a> Iterator for SplitArgs<'a> {
             match c {
                 Char::Whitespace => {
                     self.iter.advance();
-                    continue;
                 }
 
                 Char::Letter(_) => {

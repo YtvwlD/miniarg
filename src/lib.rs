@@ -193,40 +193,36 @@ where
     /// Get the next key pair or an error.
     fn next(&mut self) -> Option<Self::Item> {
         loop {
-            let arg = match self.args.next() {
-                Some(a) => a,
-                None => {
-                    return match self.last {
-                        Some(l) => {
-                            self.last = None;
-                            Some(Ok((l, "")))
-                        }
-                        None => None,
-                    };
-                }
+            let Some(arg) = self.args.next() else {
+                return match self.last {
+                    Some(l) => {
+                        self.last = None;
+                        Some(Ok((l, "")))
+                    }
+                    None => None,
+                };
             };
             if let Some(l) = self.last {
                 // the last element was a key
                 self.last = None;
                 return Some(Ok((l, arg)));
-            } else {
-                // the next element has to be a key
-                if let Some(a) = arg.strip_prefix("-") {
-                    self.last = self.options.iter().find(|o| {
-                        cfg_if! {
-                            if #[cfg(any(feature = "alloc", feature = "std"))] {
-                                first_lower(&o.to_string())
-                            } else {
-                                o.to_string()
-                            }
+            }
+            // the next element has to be a key
+            if let Some(a) = arg.strip_prefix("-") {
+                self.last = self.options.iter().find(|o| {
+                    cfg_if! {
+                        if #[cfg(any(feature = "alloc", feature = "std"))] {
+                            first_lower(&o.to_string())
+                        } else {
+                            o.to_string()
                         }
-                    } == a);
-                    if self.last.is_none() {
-                        return Some(Err(ParseError::UnknownKey(a)));
                     }
-                } else {
-                    return Some(Err(ParseError::NotAKey(arg)));
+                } == a);
+                if self.last.is_none() {
+                    return Some(Err(ParseError::UnknownKey(a)));
                 }
+            } else {
+                return Some(Err(ParseError::NotAKey(arg)));
             }
         }
     }

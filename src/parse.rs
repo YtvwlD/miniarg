@@ -58,7 +58,7 @@ impl StrRange {
 }
 
 impl Index<StrRange> for str {
-    type Output = str;
+    type Output = Self;
 
     fn index(&self, index: StrRange) -> &Self::Output {
         let start = index.start.byte_index();
@@ -164,7 +164,7 @@ impl<'a> StrChars<'a> {
     }
 }
 
-impl<'a> Iterator for StrChars<'a> {
+impl Iterator for StrChars<'_> {
     type Item = Char;
 
     fn next(&mut self) -> Option<Self::Item> {
