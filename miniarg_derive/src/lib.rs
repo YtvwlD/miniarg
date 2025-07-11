@@ -21,10 +21,7 @@ pub fn key_derive(input: TokenStream) -> TokenStream {
 
 fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
-    let data = match &ast.data {
-        syn::Data::Enum(d) => d,
-        _ => panic!("only enums are supported"),
-    };
+    let syn::Data::Enum(data) = &ast.data else { panic!("only enums are supported") };
     let mut variants = syn::punctuated::Punctuated::<_, syn::token::Comma>::new();
     let mut help_strings = Vec::new();
     for variant in &data.variants {
@@ -44,7 +41,7 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
             leading_colon: None,
             segments: path,
         });
-        let mut doc = "".to_string();
+        let mut doc = String::new();
         for attr in &variant.attrs {
             if let syn::Meta::NameValue(mnv) = &attr.meta {
                 if mnv.path.is_ident("doc") {
@@ -53,9 +50,8 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
                             if let syn::Lit::Str(s) = &l.lit {
                                 doc = s.value();
                                 break;
-                            } else {
-                                panic!("failed to parse {l:?}");
                             }
+                            panic!("failed to parse {l:?}");
                         }
                         _ => {
                             panic!("failed to parse {mnv:?}");
