@@ -1,7 +1,7 @@
 [package]
 name = "miniarg"
 version = "0.4.0"
-authors = ["Niklas Sombert <niklas@ytvwld.de>"]
+authors = ["Niklas Sombert <niklas@ytvwld.de>", "threadexio <pzarganitis@gmail.com>"]
 description = "A minimal argument parser, with support for no-std and no-alloc"
 categories = ["command-line-interface", "no-std"]
 keywords = ["argument-parser", "command-line"]
