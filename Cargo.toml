@@ -1,6 +1,6 @@
 [package]
 name = "miniarg"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Niklas Sombert <niklas@ytvwld.de>", "threadexio <pzarganitis@gmail.com>"]
 description = "A minimal argument parser, with support for no-std and no-alloc"
 categories = ["command-line-interface", "no-std"]
@@ -13,7 +13,7 @@ repository = "https://github.com/YtvwlD/miniarg"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-miniarg_derive = { version = "0.4", optional = true }
+miniarg_derive = { version = "0.5", optional = true }
 cfg-if = "1.0"
 
 [dev-dependencies]

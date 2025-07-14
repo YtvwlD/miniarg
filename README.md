@@ -17,7 +17,7 @@ The last parameter can also be just a key without a value.
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-miniarg = "0.4"
+miniarg = "0.5"
 ```
 The feature `std` is enabled by default and `alloc` and `derive` are optional.
 

@@ -15,7 +15,7 @@
 //! Add this to your `Cargo.toml`:
 //! ```toml
 //! [dependencies]
-//! miniarg = "0.3"
+//! miniarg = "0.5"
 //! ```
 //! The feature `std` is enabled by default and `alloc` and `derive` are optional.
 //!
@@ -91,7 +91,7 @@
 //! [`ToString`]: https://doc.rust-lang.org/nightly/alloc/string/trait.ToString.html
 //! [`ParseError`]: enum.ParseError.html
 //! [`split_args`]: split_args/index.html
-#![doc(html_root_url = "https://docs.rs/miniarg/0.4.0")]
+#![doc(html_root_url = "https://docs.rs/miniarg/0.5.0")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #[cfg(feature = "alloc")]
 extern crate alloc;
