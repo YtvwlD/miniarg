@@ -3,7 +3,6 @@ name = "miniarg_derive"
 version = "0.5.0"
 authors = ["Niklas Sombert <niklas@ytvwld.de>", "threadexio <pzarganitis@gmail.com>"]
 description = "custom derive for miniarg"
-readme = "README.md"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/YtvwlD/miniarg"

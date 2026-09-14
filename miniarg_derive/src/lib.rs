@@ -43,19 +43,17 @@ fn impl_key(ast: &syn::DeriveInput) -> TokenStream {
         });
         let mut doc = String::new();
         for attr in &variant.attrs {
-            if let syn::Meta::NameValue(mnv) = &attr.meta {
-                if mnv.path.is_ident("doc") {
-                    match &mnv.value {
-                        syn::Expr::Lit(l) => {
-                            if let syn::Lit::Str(s) = &l.lit {
-                                doc = s.value();
-                                break;
-                            }
-                            panic!("failed to parse {l:?}");
+            if let syn::Meta::NameValue(mnv) = &attr.meta && mnv.path.is_ident("doc") {
+                match &mnv.value {
+                    syn::Expr::Lit(l) => {
+                        if let syn::Lit::Str(s) = &l.lit {
+                            doc = s.value();
+                            break;
                         }
-                        _ => {
-                            panic!("failed to parse {mnv:?}");
-                        }
+                        panic!("failed to parse {l:?}");
+                    }
+                    _ => {
+                        panic!("failed to parse {mnv:?}");
                     }
                 }
             }

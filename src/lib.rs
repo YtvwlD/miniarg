@@ -282,7 +282,7 @@ pub trait Key {
     /// Parse the cmdline.
     ///
     /// You'll get an iterator yielding key value pairs.
-    fn parse(cmdline: &str) -> ArgumentIterator<Self, SplitArgs>
+    fn parse(cmdline: &str) -> ArgumentIterator<'_, '_, Self, SplitArgs<'_>>
     where
         Self: ToString + Sized;
 
