@@ -3,15 +3,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
     - name: Build
-      uses: clechasseur/rs-cargo@v3
+      uses: clechasseur/rs-cargo@v5.0.8
       with:
         command: build
     - name: Run tests
-      uses: clechasseur/rs-cargo@v3
+      uses: clechasseur/rs-cargo@v5.0.8
       with:
         command: test
         args: --all-features
+      # TODO: also run the tests for miniarg_derive
