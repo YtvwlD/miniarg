@@ -1,15 +1,14 @@
 [package]
 name = "miniarg_derive"
-version = "0.5.0"
-authors = ["Niklas Sombert <niklas@ytvwld.de>", "threadexio <pzarganitis@gmail.com>"]
+version.workspace = true
+authors.workspace = true
 description = "custom derive for miniarg"
-edition = "2024"
-license = "MPL-2.0"
-repository = "https://github.com/YtvwlD/miniarg"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
 
 [lib]
 proc-macro = true
-path = "src/lib.rs"
 
 [dependencies]
 syn =  { version = "3", features = [ "extra-traits" ] }
